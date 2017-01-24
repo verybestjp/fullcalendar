@@ -15,6 +15,7 @@
     "url": "https://github.com/fullcalendar/fullcalendar.git"
   },
   "license": "MIT",
+  "main": "dist/fullcalendar.js",
   "author": {
     "name": "Adam Shaw",
     "email": "arshaw@arshaw.com",
