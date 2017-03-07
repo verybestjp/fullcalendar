@@ -360,6 +360,9 @@ var AgendaView = FC.AgendaView = View.extend({
 		var timedSegs;
 		var i;
 
+		if (!events) {
+			events = [];
+		}
 		// separate the events into all-day and timed
 		for (i = 0; i < events.length; i++) {
 			if (events[i].allDay) {
