@@ -740,7 +740,7 @@ var View = FC.View = Class.extend(EmitterMixin, ListenerMixin, {
 		var scroll = this.capturedScroll;
 		var isRoot = this.discardScroll();
 
-		if (scroll.isComputed) {
+		if (scroll && scroll.isComputed) {
 			if (isRoot) {
 				// only compute initial scroll if it will actually be used (is the root capture)
 				$.extend(scroll, this.computeInitialScroll());
