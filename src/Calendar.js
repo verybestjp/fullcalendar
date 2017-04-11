@@ -791,7 +791,7 @@ function Calendar_constructor(element, overrides) {
 	function windowResize(ev) {
 		if (
 			!ignoreWindowResize &&
-			ev.target === window && // so we don't process jqui "resize" events that have bubbled up
+			ev && ev.target === window && // so we don't process jqui "resize" events that have bubbled up
 			currentView.start // view has already been rendered
 		) {
 			if (updateSize(true)) {
