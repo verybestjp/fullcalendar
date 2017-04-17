@@ -6329,6 +6329,10 @@ DayGrid.mixin({
 					' href="' + htmlEscape(event.url) + '"' :
 					''
 					) +
+				(event.target ?
+					' target="' + htmlEscape(event.target) + '"' :
+					''
+					) +
 				(skinCss ?
 					' style="' + skinCss + '"' :
 					''
@@ -7707,6 +7711,10 @@ TimeGrid.mixin({
 		return '<a class="' + classes.join(' ') + '"' +
 			(event.url ?
 				' href="' + htmlEscape(event.url) + '"' :
+				''
+				) +
+			(event.target ?
+				' target="' + htmlEscape(event.target) + '"' :
 				''
 				) +
 			(skinCss ?
@@ -14113,6 +14121,7 @@ var ListViewGrid = Grid.extend({
 		var bgColor = this.getSegBackgroundColor(seg);
 		var event = seg.event;
 		var url = event.url;
+		var target = event.target;
 		var timeHtml;
 
 		if (event.allDay) {
@@ -14149,7 +14158,8 @@ var ListViewGrid = Grid.extend({
 				'></span>' +
 			'</td>' +
 			'<td class="fc-list-item-title ' + view.widgetContentClass + '">' +
-				'<a' + (url ? ' href="' + htmlEscape(url) + '"' : '') + '>' +
+				'<a' + (url ? ' href="' + htmlEscape(url) + '"' : '') +
+				    (target ? ' target="' + htmlEscape(target) + '"' : '') + '>' +
 					htmlEscape(seg.event.title || '') +
 				'</a>' +
 			'</td>' +
