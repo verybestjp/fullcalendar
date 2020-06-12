@@ -23,7 +23,6 @@
   },
   "copyright": "2016 Adam Shaw",
   "dependencies": {
-    "jquery": ">=2.0.0",
     "moment": ">=2.9.0"
   },
   "version": "0.0.0",
@@ -51,6 +50,7 @@
     "jasmine-core": "^2.4.1",
     "jasmine-fixture": "^2.0.0",
     "jasmine-jquery": "^2.1.1",
+    "jquery": ">=2.0.0",
     "jquery-mockjax": "^2.2.0",
     "jquery-simulate": "github:jquery/jquery-simulate",
     "jshint": "^2.9.2",
