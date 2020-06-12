@@ -5,15 +5,7 @@
  */
 
 (function(factory) {
-	if (typeof define === 'function' && define.amd) {
-		define([ 'jquery', 'moment' ], factory);
-	}
-	else if (typeof exports === 'object') { // Node/CommonJS
-		module.exports = factory(require('jquery'), require('moment'));
-	}
-	else {
-		factory(jQuery, moment);
-	}
+	factory(jQuery, moment);
 })(function($, moment) {
 
 ;;
@@ -240,7 +232,7 @@ FC.getContentRect = getContentRect;
 FC.getScrollbarWidths = getScrollbarWidths;
 
 
-// borrowed from https://github.com/jquery/jquery-ui/blob/1.11.0/ui/core.js#L51
+// borrowed from https://github.com/jQuery/jQuery-ui/blob/1.11.0/ui/core.js#L51
 function getScrollParent(el) {
 	var position = el.css('position'),
 		scrollParent = el.parents().filter(function() {
@@ -1895,7 +1887,7 @@ var EmitterMixin = FC.EmitterMixin = {
 
 		// mimick jQuery's internal "proxy" system (risky, I know)
 		// causing all functions with the same .guid to appear to be the same.
-		// https://github.com/jquery/jquery/blob/2.2.4/src/core.js#L448
+		// https://github.com/jQuery/jQuery/blob/2.2.4/src/core.js#L448
 		// this is needed for calling .off with the original non-intercept handler.
 		if (!handler.guid) {
 			handler.guid = $.guid++;
@@ -11168,7 +11160,7 @@ Calendar.defaults = {
 
 	allDayText: 'all-day',
 	
-	// jquery-ui theming
+	// jQuery-ui theming
 	theme: false,
 	themeButtonIcons: {
 		prev: 'circle-triangle-w',
