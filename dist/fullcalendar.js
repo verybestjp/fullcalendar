@@ -14210,4 +14210,3 @@ fcViews.listYear = {
 
 return FC; // export for Node/CommonJS
 });
-//# sourceMappingURL=fullcalendar.js.map

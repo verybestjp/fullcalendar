@@ -178,5 +178,3 @@ function injectQsComponent(url, component) {
 
 
 });
-
-//# sourceMappingURL=gcal.js.map
