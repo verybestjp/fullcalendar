@@ -1,17 +1,18 @@
 /*!
- * FullCalendar v0.0.0
+ * FullCalendar v2.9.1
  * Docs & License: http://fullcalendar.io/
  * (c) 2016 Adam Shaw
  */
 
 (function(factory) {
-	factory(jQuery, moment);
+  // jQueryは外部ファイルから取得
+  factory(jQuery, moment);
 })(function($, moment) {
 
 ;;
 
 var FC = $.fullCalendar = {
-	version: "0.0.0",
+	version: "2.9.1",
 	internalApiVersion: 7
 };
 var fcViews = FC.views = {};
@@ -232,7 +233,7 @@ FC.getContentRect = getContentRect;
 FC.getScrollbarWidths = getScrollbarWidths;
 
 
-// borrowed from https://github.com/jQuery/jQuery-ui/blob/1.11.0/ui/core.js#L51
+// borrowed from https://github.com/jquery/jquery-ui/blob/1.11.0/ui/core.js#L51
 function getScrollParent(el) {
 	var position = el.css('position'),
 		scrollParent = el.parents().filter(function() {
@@ -1887,7 +1888,7 @@ var EmitterMixin = FC.EmitterMixin = {
 
 		// mimick jQuery's internal "proxy" system (risky, I know)
 		// causing all functions with the same .guid to appear to be the same.
-		// https://github.com/jQuery/jQuery/blob/2.2.4/src/core.js#L448
+		// https://github.com/jquery/jquery/blob/2.2.4/src/core.js#L448
 		// this is needed for calling .off with the original non-intercept handler.
 		if (!handler.guid) {
 			handler.guid = $.guid++;
@@ -9701,7 +9702,7 @@ function Toolbar(calendar, toolbarOptions) {
 
 		if (sections) {
 			if (!el) {
-				el = this.el = $("<div class='fc-toolbar "+ toolbarOptions.extraClasses + "'/>");
+				el = this.el = $("<div class='fc-toolbar "+ toolbarOptions.extraClasses + "'></div>");
 			}
 			else {
 				el.empty();
@@ -11160,7 +11161,7 @@ Calendar.defaults = {
 
 	allDayText: 'all-day',
 	
-	// jQuery-ui theming
+	// jquery-ui theming
 	theme: false,
 	themeButtonIcons: {
 		prev: 'circle-triangle-w',
@@ -14209,3 +14210,4 @@ fcViews.listYear = {
 
 return FC; // export for Node/CommonJS
 });
+//# sourceMappingURL=fullcalendar.js.map
