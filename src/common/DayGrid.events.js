@@ -139,11 +139,11 @@ DayGrid.mixin({
 						) +
 				'</div>' +
 				(isResizableFromStart ?
-					'<div class="fc-resizer fc-start-resizer" />' :
+					'<div class="fc-resizer fc-start-resizer" ></div>' :
 					''
 					) +
 				(isResizableFromEnd ?
-					'<div class="fc-resizer fc-end-resizer" />' :
+					'<div class="fc-resizer fc-end-resizer" ></div>' :
 					''
 					) +
 			'</a>';
@@ -157,7 +157,7 @@ DayGrid.mixin({
 		var colCnt = this.colCnt;
 		var segLevels = this.buildSegLevels(rowSegs); // group into sub-arrays of levels
 		var levelCnt = Math.max(1, segLevels.length); // ensure at least one level
-		var tbody = $('<tbody/>');
+		var tbody = $('<tbody></tbody>');
 		var segMatrix = []; // lookup for which segments are rendered into which level+col cells
 		var cellMatrix = []; // lookup for all <td> elements of the level+col matrix
 		var loneCellMatrix = []; // lookup for <td> elements that only take up a single column
@@ -179,7 +179,7 @@ DayGrid.mixin({
 					);
 				}
 				else {
-					td = $('<td/>');
+					td = $('<td></td>');
 					tr.append(td);
 				}
 				cellMatrix[i][col] = td;
@@ -191,7 +191,7 @@ DayGrid.mixin({
 		for (i = 0; i < levelCnt; i++) { // iterate through all levels
 			levelSegs = segLevels[i];
 			col = 0;
-			tr = $('<tr/>');
+			tr = $('<tr></tr>');
 
 			segMatrix.push([]);
 			cellMatrix.push([]);
@@ -206,7 +206,7 @@ DayGrid.mixin({
 					emptyCellsUntil(seg.leftCol);
 
 					// create a container that occupies or more columns. append the event element.
-					td = $('<td class="fc-event-container"/>').append(seg.el);
+					td = $('<td class="fc-event-container"></td>').append(seg.el);
 					if (seg.leftCol != seg.rightCol) {
 						td.attr('colspan', seg.rightCol - seg.leftCol + 1);
 					}

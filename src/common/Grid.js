@@ -612,7 +612,7 @@ var Grid = FC.Grid = Class.extend(ListenerMixin, MouseIgnorerMixin, {
 		return '<' + this.fillSegTag +
 			(classes.length ? ' class="' + classes.join(' ') + '"' : '') +
 			(css ? ' style="' + css + '"' : '') +
-			' />';
+			' ></' + this.fillSegTag + '>';
 	},
 
 

@@ -571,7 +571,7 @@ function Calendar_constructor(element, overrides) {
 			element.toggleClass('fc-rtl', isRTL);
 		});
 
-		content = $("<div class='fc-view-container'/>").prependTo(element);
+		content = $("<div class='fc-view-container'></div>").prependTo(element);
 
 		var toolbars = buildToolbars();
 		toolbarsManager = new Iterator(toolbars);
@@ -642,7 +642,7 @@ function Calendar_constructor(element, overrides) {
 				(viewsByType[viewType] = t.instantiateView(viewType));
 
 			currentView.setElement(
-				$("<div class='fc-view fc-" + viewType + "-view' />").appendTo(content)
+				$("<div class='fc-view fc-" + viewType + "-view' ></div>").appendTo(content)
 			);
 			toolbarsManager.proxyCall('activateButton', viewType);
 		}

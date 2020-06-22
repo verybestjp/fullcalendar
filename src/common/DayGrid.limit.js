@@ -102,7 +102,7 @@ DayGrid.mixin({
 				if (segsBelow.length) {
 					td = cellMatrix[levelLimit - 1][col];
 					moreLink = _this.renderMoreLink(row, col, segsBelow);
-					moreWrap = $('<div/>').append(moreLink);
+					moreWrap = $('<div></div>').append(moreLink);
 					td.append(moreWrap);
 					moreNodes.push(moreWrap[0]);
 				}
@@ -139,14 +139,14 @@ DayGrid.mixin({
 
 					// make a replacement <td> for each column the segment occupies. will be one for each colspan
 					for (j = 0; j < colSegsBelow.length; j++) {
-						moreTd = $('<td class="fc-more-cell"/>').attr('rowspan', rowspan);
+						moreTd = $('<td class="fc-more-cell"></td>').attr('rowspan', rowspan);
 						segsBelow = colSegsBelow[j];
 						moreLink = this.renderMoreLink(
 							row,
 							seg.leftCol + j,
 							[ seg ].concat(segsBelow) // count seg as hidden too
 						);
-						moreWrap = $('<div/>').append(moreLink);
+						moreWrap = $('<div></div>').append(moreLink);
 						moreTd.append(moreWrap);
 						segMoreNodes.push(moreTd[0]);
 						moreNodes.push(moreTd[0]);
@@ -187,7 +187,7 @@ DayGrid.mixin({
 		var _this = this;
 		var view = this.view;
 
-		return $('<a class="fc-more"/>')
+		return $('<a class="fc-more"></a>')
 			.text(
 				this.getMoreLinkText(hiddenSegs.length)
 			)
@@ -292,7 +292,7 @@ DayGrid.mixin({
 				'<span class="fc-title">' +
 					htmlEscape(title) +
 				'</span>' +
-				'<div class="fc-clear"/>' +
+				'<div class="fc-clear"></div>' +
 			'</div>' +
 			'<div class="fc-body ' + view.widgetContentClass + '">' +
 				'<div class="fc-event-container"></div>' +

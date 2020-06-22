@@ -145,7 +145,7 @@ var DayGrid = FC.DayGrid = Grid.extend(DayTableMixin, {
 
 		if (!this.view.dayNumbersVisible && !this.view.cellWeekNumbersVisible) {
 			// no numbers in day cell (week number must be along the side)
-			return '<td/>'; //  will create an empty space above events :(
+			return '<td></td>'; //  will create an empty space above events :(
 		}
 
 		classes = this.getDayClasses(date);
@@ -357,7 +357,7 @@ var DayGrid = FC.DayGrid = Grid.extend(DayTableMixin, {
 		// inject each new event skeleton into each associated row
 		this.rowEls.each(function(row, rowNode) {
 			var rowEl = $(rowNode); // the .fc-row
-			var skeletonEl = $('<div class="fc-helper-skeleton"><table/></div>'); // will be absolutely positioned
+			var skeletonEl = $('<div class="fc-helper-skeleton"><table></table></div>'); // will be absolutely positioned
 			var skeletonTop;
 
 			// If there is an original segment, match the top position. Otherwise, put it at the row's top level
@@ -432,13 +432,13 @@ var DayGrid = FC.DayGrid = Grid.extend(DayTableMixin, {
 
 		skeletonEl = $(
 			'<div class="fc-' + className + '-skeleton">' +
-				'<table><tr/></table>' +
+				'<table><tr></tr></table>' +
 			'</div>'
 		);
 		trEl = skeletonEl.find('tr');
 
 		if (startCol > 0) {
-			trEl.append('<td colspan="' + startCol + '"/>');
+			trEl.append('<td colspan="' + startCol + '"></td>');
 		}
 
 		trEl.append(
@@ -446,7 +446,7 @@ var DayGrid = FC.DayGrid = Grid.extend(DayTableMixin, {
 		);
 
 		if (endCol < colCnt) {
-			trEl.append('<td colspan="' + (colCnt - endCol) + '"/>');
+			trEl.append('<td colspan="' + (colCnt - endCol) + '"></td>');
 		}
 
 		this.bookendCells(trEl);
