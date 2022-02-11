@@ -54,7 +54,7 @@
     "jquery-mockjax": "^2.2.0",
     "jquery-simulate": "github:jquery/jquery-simulate",
     "jshint": "^2.9.2",
-    "karma": "^0.13.22",
+    "karma": "^6.3.14",
     "karma-jasmine": "^1.0.2",
     "karma-phantomjs-launcher": "^1.0.0",
     "lodash": "^4.14.1",
