@@ -13387,6 +13387,17 @@ var AgendaView = FC.AgendaView = View.extend({
 	renderDates: function() {
 
 		this.el.addClass('fc-agenda-view').html(this.renderSkeletonHtml());
+		if (this.opt('fixedHeader')) {
+			this.el.find('.fc-head')
+				.css('display', 'block')
+				.css('overflow-y', 'scroll');
+			this.el.find('.fc-body')
+				.css('display', 'block')
+				.css('overflow-y', 'scroll');
+		}
+		if (this.opt('bodyHeight')) {
+			this.el.find('.fc-body').css('height', this.opt('bodyHeight'));
+		}
 		this.renderHead();
 
 		this.scroller.render();

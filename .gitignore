@@ -1,5 +1,9 @@
-tmp
+/tmp/
 
 # npm
-node_modules
+/node_modules/
 npm-debug.log
+
+*.swp
+
+.node-version
