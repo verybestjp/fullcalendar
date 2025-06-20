@@ -7,85 +7,87 @@ var uglify = require('gulp-uglify');
 var fs = require('fs');
 var del = require('del');
 
-// global state for locale:each:data
-var localeData; // array of virtual files that gulp-file accepts
-var skippedLocaleCodes;
-
-// generates individual locale files and the combined one
-gulp.task('locale', [ 'locale:each', 'locale:all' ], function() {
-	gutil.log(skippedLocaleCodes.length + ' skipped locales: ' + skippedLocaleCodes.join(', '));
-	gutil.log(localeData.length + ' generated locales.');
-});
-
-// watches changes to any locale, and rebuilds all
-gulp.task('locale:watch', [ 'locale' ], function() {
-	return gulp.watch('locale/*.js', [ 'locale' ]);
-});
-
+// ロケールファイルを削除
 gulp.task('locale:clean', function() {
-	return del([
-		'dist/locale-all.js',
-		'dist/locale/'
-	]);
+  return del([
+    'dist/locale-all.js',
+    'dist/locale/'
+  ]);
 });
 
-// generates the combined locale file, minified
-gulp.task('locale:all', [ 'locale:each:data' ], function() {
-	return gfile(localeData, { src: true }) // src:true for using at beginning of pipeline
-		.pipe(modify({
-			fileModifier: function(file, content) {
-				return wrapWithClosure(content);
-			}
-		}))
-		.pipe(concat('locale-all.js'))
-		.pipe(modify({
-			fileModifier: function(file, content) {
-				// code for resetting the locale back to English
-				content += '\nmoment.locale("en");';
-				content += '\n$.fullCalendar.locale("en");';
-				content += '\nif ($.datepicker) $.datepicker.setDefaults($.datepicker.regional[""]);';
-
-				return wrapWithUMD(content);
-			}
-		}))
-		.pipe(uglify())
-		.pipe(gulp.dest('dist/'));
-});
-
-// generates each individual locale file, minified
-gulp.task('locale:each', [ 'locale:each:data' ], function() {
-	return gfile(localeData, { src: true }) // src:true for using at beginning of pipeline
-		.pipe(modify({
-			fileModifier: function(file, content) {
-				return wrapWithUMD(content); // each locale file needs its own UMD wrap
-			}
-		}))
-		.pipe(uglify())
-		.pipe(gulp.dest('dist/locale/'));
-});
-
-// populates global-state variables with individual locale code
+// グローバル状態変数に個別のロケールコードを投入
 gulp.task('locale:each:data', function() {
-	localeData = [];
-	skippedLocaleCodes = [];
+  localeData = [];
+  skippedLocaleCodes = [];
 
-	return gulp.src('node_modules/moment/locale/*.js')
-		.pipe(modify({
-			fileModifier: function(file, momentContent) {
-				var localeCode = file.path.match(/([^\/\\]*)\.js$/)[1];
-				var js = getLocaleJs(localeCode, momentContent);
+  return gulp.src('node_modules/moment/locale/*.js')
+    .pipe(modify({
+      fileModifier: function(file, momentContent) {
+        var localeCode = file.path.match(/([^\/\\]*)\.js$/)[1];
+        var js = getLocaleJs(localeCode, momentContent);
 
-				if (js) {
-					insertLocaleData(localeCode, js);
-				}
-				else {
-					skippedLocaleCodes.push(localeCode);
-				}
+        if (js) {
+          insertLocaleData(localeCode, js);
+        }
+        else {
+          skippedLocaleCodes.push(localeCode);
+        }
 
-				return ''; // `modify` needs a string result
-			}
-		}));
+        return ''; // `modify` には文字列の結果が必要
+      }
+    }));
 });
+
+
+// 結合されたロケールファイルを生成（ミニファイ済み）
+gulp.task('locale:all', gulp.series('locale:each:data', function() {
+  return gfile(localeData, { src: true }) // パイプラインの開始時に使用するためsrc:true
+    .pipe(modify({
+      fileModifier: function(file, content) {
+        return wrapWithClosure(content);
+      }
+    }))
+    .pipe(concat('locale-all.js'))
+    .pipe(modify({
+      fileModifier: function(file, content) {
+        // ロケールを英語にリセットするコード
+        content += '\nmoment.locale("en");';
+        content += '\n$.fullCalendar.locale("en");';
+        content += '\nif ($.datepicker) $.datepicker.setDefaults($.datepicker.regional[""]);';
+
+        return wrapWithUMD(content);
+      }
+    }))
+    .pipe(uglify())
+    .pipe(gulp.dest('dist/'));
+}));
+
+// 個別のロケールファイルを生成（ミニファイ済み）
+gulp.task('locale:each', gulp.series('locale:each:data', function() {
+  return gfile(localeData, { src: true }) // パイプラインの開始時に使用するためsrc:true
+    .pipe(modify({
+      fileModifier: function(file, content) {
+        return wrapWithUMD(content); // 各ロケールファイルには独自のUMDラップが必要
+      }
+    }))
+    .pipe(uglify())
+    .pipe(gulp.dest('dist/locale/'));
+}));
+
+// ロケールタスク（並列実行後にログ出力）
+gulp.task('locale', gulp.series(
+  gulp.parallel('locale:each', 'locale:all'),
+  function(done) {
+    gutil.log(skippedLocaleCodes.length + ' skipped locales: ' + skippedLocaleCodes.join(', '));
+    gutil.log(localeData.length + ' generated locales.');
+    done();
+  }
+));
+
+// ロケールファイルの変更を監視し、すべてを再ビルド
+gulp.task('locale:watch', gulp.series('locale', function() {
+  return gulp.watch('locale/*.js', gulp.series('locale'));
+}));
 
 
 // inserts into the global-state locale array, maintaining alphabetical order
