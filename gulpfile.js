@@ -3,46 +3,49 @@ var del = require('del');
 
 require('./tasks/modules');
 require('./tasks/minify');
-require('./tasks/archive');
 require('./tasks/locale');
+require('./tasks/archive');
 require('./tasks/bump');
 
-// when running just `gulp`
-gulp.task('default', [ 'dist' ]);
+// 配布用タスク（直列実行）
+gulp.task('dist', gulp.series(
+  gulp.parallel('modules', 'locale'),
+  'minify'
+));
 
-// everything needed for running demos and developing
-gulp.task('dev', [
-	'modules:dev',
-	'locale'
-]);
+// デフォルトタスク
+gulp.task('default', gulp.series('dist'));
 
-// watch anything that needs to be built
-gulp.task('watch', [
-	'modules:watch',
-	'locale:watch'
-]);
+// 開発用タスク（並列実行）
+gulp.task('dev', gulp.parallel(
+  'modules:dev',
+  'locale'
+));
 
-// generates all files that end up in package manager release
-gulp.task('dist', [
-	'modules',
-	'locale',
-	'minify'
-]);
+// 監視タスク（並列実行）
+gulp.task('watch', gulp.parallel(
+  'modules:watch',
+  'locale:watch'
+));
 
-// like dist, but runs tests and generates archive
-gulp.task('release', [
-	'dist',
-	'archive'
-]);
+// リリースタスク（直列実行）
+gulp.task('release', gulp.series(
+  'dist',
+  'archive'
+));
 
-gulp.task('clean', [
-	'modules:clean',
-	'locale:clean',
-	'minify:clean',
-	'archive:clean'
-], function() {
-	return del([ // kill these directories, and anything leftover in them
-		'dist/',
-		'tmp/'
-	]);
-});
+// クリーンタスク（直列実行）
+gulp.task('clean', gulp.series(
+  gulp.parallel(
+    'modules:clean',
+    'locale:clean',
+    'minify:clean',
+    'archive:clean'
+  ),
+  function() {
+    return del([
+      'dist/',
+      'tmp/'
+    ]);
+  }
+));

@@ -33,7 +33,6 @@
     "Calendar.options.js",
     "defaults.js",
     "locale.js",
-    "Header.js",
     "EventManager.js",
     "basic/BasicView.js",
     "basic/MonthView.js",
