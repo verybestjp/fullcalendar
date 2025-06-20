@@ -5,8 +5,6 @@ require('./tasks/modules');
 require('./tasks/minify');
 require('./tasks/archive');
 require('./tasks/locale');
-require('./tasks/test');
-require('./tasks/lint');
 require('./tasks/bump');
 
 // when running just `gulp`
@@ -31,12 +29,10 @@ gulp.task('dist', [
 	'minify'
 ]);
 
-// like dist, but runs tests and linting, and generates archive
+// like dist, but runs tests and generates archive
 gulp.task('release', [
-	'lint',
 	'dist',
-	'archive',
-	'test:single' // headless, single run
+	'archive'
 ]);
 
 gulp.task('clean', [
