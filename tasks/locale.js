@@ -6,255 +6,267 @@ var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
 var fs = require('fs');
 var del = require('del');
+var Vinyl = require('vinyl');
+var through = require('through2');
 
-// global state for locale:each:data
-var localeData; // array of virtual files that gulp-file accepts
-var skippedLocaleCodes;
+// グローバル変数の初期化
+var localeData = [];
+var skippedLocaleCodes = [];
 
-// generates individual locale files and the combined one
-gulp.task('locale', [ 'locale:each', 'locale:all' ], function() {
-	gutil.log(skippedLocaleCodes.length + ' skipped locales: ' + skippedLocaleCodes.join(', '));
-	gutil.log(localeData.length + ' generated locales.');
-});
-
-// watches changes to any locale, and rebuilds all
-gulp.task('locale:watch', [ 'locale' ], function() {
-	return gulp.watch('locale/*.js', [ 'locale' ]);
-});
-
+// ロケールファイルを削除
 gulp.task('locale:clean', function() {
-	return del([
-		'dist/locale-all.js',
-		'dist/locale/'
-	]);
+  return del([
+    'dist/locale-all.js',
+    'dist/locale/'
+  ]);
 });
 
-// generates the combined locale file, minified
-gulp.task('locale:all', [ 'locale:each:data' ], function() {
-	return gfile(localeData, { src: true }) // src:true for using at beginning of pipeline
-		.pipe(modify({
-			fileModifier: function(file, content) {
-				return wrapWithClosure(content);
-			}
-		}))
-		.pipe(concat('locale-all.js'))
-		.pipe(modify({
-			fileModifier: function(file, content) {
-				// code for resetting the locale back to English
-				content += '\nmoment.locale("en");';
-				content += '\n$.fullCalendar.locale("en");';
-				content += '\nif ($.datepicker) $.datepicker.setDefaults($.datepicker.regional[""]);';
-
-				return wrapWithUMD(content);
-			}
-		}))
-		.pipe(uglify())
-		.pipe(gulp.dest('dist/'));
-});
-
-// generates each individual locale file, minified
-gulp.task('locale:each', [ 'locale:each:data' ], function() {
-	return gfile(localeData, { src: true }) // src:true for using at beginning of pipeline
-		.pipe(modify({
-			fileModifier: function(file, content) {
-				return wrapWithUMD(content); // each locale file needs its own UMD wrap
-			}
-		}))
-		.pipe(uglify())
-		.pipe(gulp.dest('dist/locale/'));
-});
-
-// populates global-state variables with individual locale code
+// グローバル状態変数に個別のロケールコードを投入
 gulp.task('locale:each:data', function() {
-	localeData = [];
-	skippedLocaleCodes = [];
+  localeData = [];
+  skippedLocaleCodes = [];
 
-	return gulp.src('node_modules/moment/locale/*.js')
-		.pipe(modify({
-			fileModifier: function(file, momentContent) {
-				var localeCode = file.path.match(/([^\/\\]*)\.js$/)[1];
-				var js = getLocaleJs(localeCode, momentContent);
+  return gulp.src('node_modules/moment/locale/*.js')
+    .pipe(modify({
+      fileModifier: function(file, momentContent) {
+        var localeCode = file.path.match(/([^\/\\]*)\.js$/)[1];
+        var js = getLocaleJs(localeCode, momentContent);
 
-				if (js) {
-					insertLocaleData(localeCode, js);
-				}
-				else {
-					skippedLocaleCodes.push(localeCode);
-				}
+        if (js) {
+          insertLocaleData(localeCode, js);
+        }
+        else {
+          skippedLocaleCodes.push(localeCode);
+        }
 
-				return ''; // `modify` needs a string result
-			}
-		}));
+        return ''; // `modify` には文字列の結果が必要
+      }
+    }));
 });
 
+// 結合されたロケールファイルを生成（ミニファイ済み）
+gulp.task('locale:all', gulp.series('locale:each:data', function() {
+  // localeDataから仮想ファイルストリームを作成
+  var stream = through.obj();
 
-// inserts into the global-state locale array, maintaining alphabetical order
+  // 各ロケールファイルを個別に処理
+  localeData.forEach(function(locale) {
+    var file = new Vinyl({
+      path: locale.name,
+      contents: Buffer.from(locale.source)
+    });
+    stream.write(file);
+  });
+  
+  stream.end();
+
+  return stream
+    .pipe(modify({
+      fileModifier: function(file, content) {
+        return wrapWithClosure(content);
+      }
+    }))
+    .pipe(concat('locale-all.js'))
+    .pipe(modify({
+      fileModifier: function(file, content) {
+        // ロケールを英語にリセットするコード
+        content += '\nmoment.locale("en");';
+        content += '\n$.fullCalendar.locale("en");';
+        content += '\nif ($.datepicker) $.datepicker.setDefaults($.datepicker.regional[""]);';
+
+        return wrapWithUMD(content);
+      }
+    }))
+    .pipe(uglify())
+    .pipe(gulp.dest('dist/'));
+}));
+
+// 個別のロケールファイルを生成（ミニファイ済み）
+gulp.task('locale:each', gulp.series('locale:each:data', function() {
+  // localeDataから仮想ファイルストリームを作成
+  var stream = through.obj();
+
+  // 各ロケールファイルを個別に処理
+  localeData.forEach(function(locale) {
+    var file = new Vinyl({
+      path: locale.name,
+      contents: Buffer.from(locale.source)
+    });
+    stream.write(file);
+  });
+  
+  stream.end();
+
+  return stream
+    .pipe(modify({
+      fileModifier: function(file, content) {
+        return wrapWithUMD(content); // 各ロケールファイルには独自のUMDラップが必要
+      }
+    }))
+    .pipe(uglify())
+    .pipe(gulp.dest('dist/locale/'));
+}));
+
+// ロケールタスク（並列実行後にログ出力）
+gulp.task('locale', gulp.series(
+  gulp.parallel('locale:each', 'locale:all'),
+  function(done) {
+    gutil.log(skippedLocaleCodes.length + ' skipped locales: ' + skippedLocaleCodes.join(', '));
+    gutil.log(localeData.length + ' generated locales.');
+    done();
+  }
+));
+
+// ロケールファイルの変更を監視し、すべてを再ビルド
+gulp.task('locale:watch', gulp.series('locale', function() {
+  return gulp.watch('locale/*.js', gulp.series('locale'));
+}));
+
+// 以下の関数は変更なし
 function insertLocaleData(localeCode, js) {
-	var i;
+  var i;
 
-	for (i = 0; i < localeData.length; i++) {
-		if (localeCode < localeData[i].name) { // string comparison
-			break;
-		}
-	}
+  for (i = 0; i < localeData.length; i++) {
+    if (localeCode < localeData[i].name) { // string comparison
+      break;
+    }
+  }
 
-	localeData.splice(i, 0, { // insert at index
-		name: localeCode + '.js',
-		source: js
-	});
+  localeData.splice(i, 0, { // insert at index
+    name: localeCode + '.js',
+    source: js
+  });
 }
 
-
+// 残りの関数は元のまま...
 function getLocaleJs(localeCode, momentContent) {
-	
-	var shortLocaleCode;
-	var momentLocaleJS;
-	var datepickerLocaleJS;
-	var fullCalendarLocaleJS;
+  var shortLocaleCode;
+  var momentLocaleJS;
+  var datepickerLocaleJS;
+  var fullCalendarLocaleJS;
 
-	// given "fr-ca", get just "fr"
-	if (localeCode.indexOf('-') != -1) {
-		shortLocaleCode = localeCode.replace(/-.*/, '');
-	}
+  if (localeCode.indexOf('-') != -1) {
+    shortLocaleCode = localeCode.replace(/-.*/, '');
+  }
 
-	momentLocaleJS = extractMomentLocaleJS(momentContent);
+  momentLocaleJS = extractMomentLocaleJS(momentContent);
 
-	datepickerLocaleJS = getDatepickerLocaleJS(localeCode);
-	if (!datepickerLocaleJS && shortLocaleCode) {
-		datepickerLocaleJS = getDatepickerLocaleJS(shortLocaleCode, localeCode);
-	}
+  datepickerLocaleJS = getDatepickerLocaleJS(localeCode);
+  if (!datepickerLocaleJS && shortLocaleCode) {
+    datepickerLocaleJS = getDatepickerLocaleJS(shortLocaleCode, localeCode);
+  }
 
-	fullCalendarLocaleJS = getFullCalendarLocaleJS(localeCode);
-	if (!fullCalendarLocaleJS && shortLocaleCode) {
-		fullCalendarLocaleJS = getFullCalendarLocaleJS(shortLocaleCode, localeCode);
-	}
+  fullCalendarLocaleJS = getFullCalendarLocaleJS(localeCode);
+  if (!fullCalendarLocaleJS && shortLocaleCode) {
+    fullCalendarLocaleJS = getFullCalendarLocaleJS(shortLocaleCode, localeCode);
+  }
 
-	// If this is an "en" locale, only the Moment config is needed.
-	// For all other locales, all 3 configs are needed.
-	if (momentLocaleJS && (shortLocaleCode == 'en' || (datepickerLocaleJS && fullCalendarLocaleJS))) {
+  if (momentLocaleJS && (shortLocaleCode == 'en' || (datepickerLocaleJS && fullCalendarLocaleJS))) {
+    if (!fullCalendarLocaleJS) {
+      fullCalendarLocaleJS = '$.fullCalendar.locale("' + localeCode + '");';
+    }
 
-		// if there is no definition, we still need to tell FC to set the default
-		if (!fullCalendarLocaleJS) {
-			fullCalendarLocaleJS = '$.fullCalendar.locale("' + localeCode + '");';
-		}
+    datepickerLocaleJS = datepickerLocaleJS || '';
 
-		datepickerLocaleJS = datepickerLocaleJS || '';
-
-		return momentLocaleJS + '\n' +
-			datepickerLocaleJS + '\n' +
-			fullCalendarLocaleJS;
-	}
+    return momentLocaleJS + '\n' +
+      datepickerLocaleJS + '\n' +
+      fullCalendarLocaleJS;
+  }
 }
-
 
 function wrapWithUMD(body) {
-	return [
-		'(function(factory) {',
-		'    if (typeof define === "function" && define.amd) {',
-		'        define([ "jquery", "moment" ], factory);',
-		'    }',
-		'    else if (typeof exports === "object") {',
-		'        module.exports = factory(require("jquery"), require("moment"));',
-		'    }',
-		'    else {',
-		'        factory(jQuery, moment);',
-		'    }',
-		'})(function($, moment) {',
-		'',
-		body,
-		'',
-		'});'
-	].join('\n');
+  return [
+    '(function(factory) {',
+    '    if (typeof define === "function" && define.amd) {',
+    '        define([ "jquery", "moment" ], factory);',
+    '    }',
+    '    else if (typeof exports === "object") {',
+    '        module.exports = factory(require("jquery"), require("moment"));',
+    '    }',
+    '    else {',
+    '        factory(jQuery, moment);',
+    '    }',
+    '})(function($, moment) {',
+    '',
+    body,
+    '',
+    '});'
+  ].join('\n');
 }
-
 
 function wrapWithClosure(body) {
-	return [
-		'(function() {',
-		'',
-		body,
-		'',
-		'})();'
-	].join('\n');
+  return [
+    '(function() {',
+    '',
+    body,
+    '',
+    '})();'
+  ].join('\n');
 }
-
 
 function extractMomentLocaleJS(js) {
+  js = js.replace(
+    /\(\s*function[\S\s]*?function\s*\(\s*moment\s*\)\s*\{([\S\s]*)\}\)\)\)?;?/,
+    function(m0, body) {
+      return body;
+    }
+  );
 
-	// remove the UMD wrap
-	js = js.replace(
-		/\(\s*function[\S\s]*?function\s*\(\s*moment\s*\)\s*\{([\S\s]*)\}\)\)\)?;?/,
-		function(m0, body) {
-			return body;
-		}
-	);
-
-	// the JS will return a value. wrap in a closure to avoid haulting execution
-	js = '(function() {\n' + js + '})();\n';
-
-	return js;
+  js = '(function() {\n' + js + '})();\n';
+  return js;
 }
-
 
 function getDatepickerLocaleJS(localeCode, targetLocaleCode) {
+  var datepickerLocaleCode = localeCode.replace(/\-(\w+)/, function(m0, m1) {
+    return '-' + m1.toUpperCase();
+  });
 
-	// convert "en-ca" to "en-CA"
-	var datepickerLocaleCode = localeCode.replace(/\-(\w+)/, function(m0, m1) {
-		return '-' + m1.toUpperCase();
-	});
+  var path = 'node_modules/components-jqueryui/ui/i18n/datepicker-' + datepickerLocaleCode + '.js';
+  var js;
 
-	var path = 'node_modules/components-jqueryui/ui/i18n/datepicker-' + datepickerLocaleCode + '.js';
-	var js;
+  try {
+    js = fs.readFileSync(path, { encoding: 'utf8' });
+  }
+  catch (ex) {
+    return false;
+  }
 
-	try {
-		js = fs.readFileSync(path, { encoding: 'utf8' });
-	}
-	catch (ex) {
-		return false;
-	}
+  js = js.replace(
+    /\(\s*function[\S\s]*?function\s*\(\s*datepicker\s*\)\s*\{([\S\s]*)\}\s*\)\s*\)\s*;?/m,
+    function(m0, body) {
+      var match = body.match(/datepicker\.regional[\S\s]*?(\{[\S\s]*?\});?/);
+      var props = match[1];
 
-	js = js.replace( // remove the UMD wrap
-		/\(\s*function[\S\s]*?function\s*\(\s*datepicker\s*\)\s*\{([\S\s]*)\}\s*\)\s*\)\s*;?/m,
-		function(m0, body) { // use only the function body, modified
+      props = props.replace(/^\t/mg, '');
 
-			var match = body.match(/datepicker\.regional[\S\s]*?(\{[\S\s]*?\});?/);
-			var props = match[1];
+      return "$.fullCalendar.datepickerLocale(" +
+        "'" + (targetLocaleCode || localeCode) + "', " +
+        "'" + datepickerLocaleCode + "', " +
+        props +
+        ");";
+    }
+  );
 
-			// remove 1 level of tab indentation
-			props = props.replace(/^\t/mg, '');
-
-			return "$.fullCalendar.datepickerLocale(" +
-				"'" + (targetLocaleCode || localeCode) + "', " + // for FullCalendar
-				"'" + datepickerLocaleCode + "', " + // for datepicker
-				props +
-				");";
-		}
-	);
-
-	return js;
+  return js;
 }
 
-
 function getFullCalendarLocaleJS(localeCode, targetLocaleCode) {
+  var path = 'locale/' + localeCode + '.js';
+  var js;
 
-	var path = 'locale/' + localeCode + '.js';
-	var js;
+  try {
+    js = fs.readFileSync(path, { encoding: 'utf8' });
+  }
+  catch (ex) {
+    return false;
+  }
 
-	try {
-		js = fs.readFileSync(path, { encoding: 'utf8' });
-	}
-	catch (ex) {
-		return false;
-	}
+  if (targetLocaleCode && targetLocaleCode != localeCode) {
+    js = js.replace(
+      /\$\.fullCalendar\.locale\(['"]([^'"]*)['"]/,
+      '$.fullCalendar.locale("' + targetLocaleCode + '"'
+    );
+  }
 
-	// if we originally wanted "ar-ma", but only "ar" is available, we have to adjust
-	// the declaration
-	if (targetLocaleCode && targetLocaleCode != localeCode) {
-		js = js.replace(
-			/\$\.fullCalendar\.locale\(['"]([^'"]*)['"]/,
-			'$.fullCalendar.locale("' + targetLocaleCode + '"'
-		);
-	}
-
-	return js;
+  return js;
 }

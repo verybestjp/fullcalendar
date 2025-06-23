@@ -10,54 +10,66 @@ var _ = require('lodash');
 var packageConf = require('../package.json');
 var srcConf = require('../src.json');
 
-// generates js/css files in dist directory
-gulp.task('modules', _.map(srcConf, function(srcFiles, distFile) {
-	return 'modules:' + distFile; // generates an array of task names
-}));
-
-// generates js/css/sourcemap files in dist directory
-gulp.task('modules:dev', _.map(srcConf, function(srcFiles, distFile) {
-	return 'modules:dev:' + distFile; // generates an array of task names
-}));
-
-// watches source files and generates js/css/sourcemaps
-gulp.task('modules:watch', _.map(srcConf, function(srcFiles, distFile) {
-	return 'modules:watch:' + distFile; // generates an array of task names
-}));
-
-// deletes all generated js/css files in the dist directory
-gulp.task('modules:clean', function() {
-	return del('dist/*.{js,css,map}');
-});
-
-// loop the distFile:srcFiles map
+// distFile:srcFiles のマップをループ
 _.forEach(srcConf, function(srcFiles, distFile) {
-	var isJs = /\.js$/.test(distFile);
-	var separator = isJs ? '\n;;\n' : '\n\n'; // inserted between concated files
+  var isJs = /\.js$/.test(distFile);
+  var separator = isJs ? '\n;;\n' : '\n\n'; // 結合されたファイル間に挿入
 
-	gulp.task('modules:' + distFile, function() {
-		return gulp.src(srcFiles, { cwd: 'src/', base: 'src/' })
-			.pipe(plumber()) // affects future streams
-			.pipe(concat(distFile, { newLine: separator }))
-			.pipe(template(packageConf)) // replaces <%= %> variables
-			.pipe(gulp.dest('dist/'));
-	});
+  // 本番用ビルドタスク
+  gulp.task('modules:' + distFile, function() {
+    return gulp.src(srcFiles, { cwd: 'src/', base: 'src/' })
+      .pipe(plumber()) // 将来のストリームに影響
+      .pipe(concat(distFile, { newLine: separator }))
+      .pipe(template(packageConf)) // <%= %> 変数を置換
+      .pipe(gulp.dest('dist/'));
+  });
 
-	gulp.task('modules:dev:' + distFile, function() {
-		return gulp.src(srcFiles, { cwd: 'src/', base: 'src/' })
-			.pipe(plumber()) // affects future streams
-			.pipe(sourcemaps.init())
-			.pipe(concat(distFile, { newLine: separator }))
-			.pipe(template(packageConf)) // replaces <%= %> variables
-			.pipe(sourcemaps.write('.', {
-				includeContent: false, // because we'll reference the src files
-				sourceRoot: '../src/' // relative to outputted file in dist
-			}))
-			.pipe(gulp.dest('dist/'));
-	});
+  // 開発用ビルドタスク（ソースマップ付き）
+  gulp.task('modules:dev:' + distFile, function() {
+    return gulp.src(srcFiles, { cwd: 'src/', base: 'src/' })
+      .pipe(plumber()) // 将来のストリームに影響
+      .pipe(sourcemaps.init())
+      .pipe(concat(distFile, { newLine: separator }))
+      .pipe(template(packageConf)) // <%= %> 変数を置換
+      .pipe(sourcemaps.write('.', {
+        includeContent: false, // srcファイルを参照するため
+        sourceRoot: '../src/' // dist内の出力ファイルからの相対パス
+      }))
+      .pipe(gulp.dest('dist/'));
+  });
 
-	// generates dev files first, then watches
-	gulp.task('modules:watch:' + distFile, [ 'modules:dev:' + distFile ], function() {
-		return gulp.watch(srcFiles, { cwd: 'src/' }, [ 'modules:dev:' + distFile ]);
-	});
+  // 監視タスク（開発用ファイルを生成してから監視開始）
+  gulp.task('modules:watch:' + distFile, gulp.series(
+    'modules:dev:' + distFile,
+    function() {
+      return gulp.watch(srcFiles, { cwd: 'src/' }, gulp.series('modules:dev:' + distFile));
+    }
+  ));
 });
+
+// モジュールタスク（並列実行）
+gulp.task('modules', gulp.parallel(
+  _.map(srcConf, function(srcFiles, distFile) {
+    return 'modules:' + distFile; // generates an array of task names
+  })
+));
+
+// 開発用モジュールタスク（並列実行）
+gulp.task('modules:dev', gulp.parallel(
+  _.map(srcConf, function(srcFiles, distFile) {
+    return 'modules:dev:' + distFile; // generates an array of task names
+  })
+));
+
+// 監視用モジュールタスク（並列実行）
+gulp.task('modules:watch', gulp.parallel(
+  _.map(srcConf, function(srcFiles, distFile) {
+    return 'modules:watch:' + distFile; // generates an array of task names
+  })
+));
+
+// 生成されたjs/cssファイルを削除
+gulp.task('modules:clean', function() {
+  return del('dist/*.{js,css,map}');
+});
+

@@ -6,5 +6,6 @@
 
 (function(factory) {
   // jQueryは外部ファイルから取得
+  var moment = require('moment');
   factory(jQuery, moment);
 })(function($, moment) {
