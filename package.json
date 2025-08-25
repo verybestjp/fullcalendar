@@ -22,9 +22,6 @@
     "url": "http://arshaw.com/"
   },
   "copyright": "2016 Adam Shaw",
-  "dependencies": {
-    "moment": ">=2.9.0"
-  },
   "version": "2.9.1",
   "releaseDate": "1970-01-01",
   "devDependencies": {
@@ -60,5 +57,8 @@
     "CHANGELOG.*",
     "CONTRIBUTING.*"
   ],
-  "scripts": {}
+  "scripts": {},
+  "dependencies": {
+    "moment": "git+https://git@github.com/verybestjp/moment.git"
+  }
 }
